@@ -1,5 +1,8 @@
 # Pyz-Lucy Project
 ## Lottery Program
+
+[点击跳转至中文使用文档](https://github.com/PengYiZhen/pyz-lucy/edit/master/README-ZH_CN.MD)
+
 ## Introduction
 
 * **File Mode**: Year-end party lottery program with 3D sphere, supports prize configuration, Excel import of participants, and Excel export of results.
