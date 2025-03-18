@@ -1,7 +1,7 @@
 # Pyz-Lucy Project
 ## Lottery Program
 
-[点击跳转至中文使用文档](https://github.com/PengYiZhen/pyz-lucy/master/README-ZH_CN.MD)
+[点击跳转至中文使用文档](README-ZH_CN.MD)
 
 ## Introduction
 
