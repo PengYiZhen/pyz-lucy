@@ -1,5 +1,5 @@
 {
-  "name": "lucky",
+  "name": "pyz-lucky",
   "version": "1.0.0",
   "description": "抽奖",
   "main": "index.js",
