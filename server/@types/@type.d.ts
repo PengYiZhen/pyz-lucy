@@ -6,6 +6,8 @@ declare namespace NodeJS {
     MYSQL_USER: string;
     MYSQL_PASSWORD: string;
     MYSQL_DATABASE: string;
+    CHOUJIANG_TABLE_NAME: string;
+    USER_TABLE_NAME: string;
   }
 }
 

@@ -86,7 +86,8 @@ router.post("/login", (req, res, next) => {
 router.post("/getTempData", async (req, res, next) => {
     getLeftUsers();
     if(await DB.getConnectionStatus()) {
-        const result = await DB.execute(`select * from prize`);
+        const result = await DB.execute(`select * from ${process.env.CHOUJIANG_TABLE_NAME || 'prize'}`);
+        console.log(result)
         curData.users = result as any[];
         cfg.EACH_COUNT = (result as any[]).map((item: { count: number; })=>item.count);
         res.json({
@@ -216,8 +217,7 @@ router.all("*", (req, res) => {
 async function loadData(): Promise<void> {
     if (await DB.getConnectionStatus()) {
         console.log("加载MySQL数据");
-        const result= await DB.execute('SELECT * FROM users');
-        console.log(result)
+        const result= await DB.execute(`SELECT * FROM ${process.env.USER_TABLE_NAME || 'users'}`);
         curData.users = (result as any[]).map(row => [row.openid, row.name, row.phone]) as any;
         shuffle(curData.users || []);
         loadTempData().then((data: any[]) => {
