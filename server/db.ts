@@ -1,4 +1,8 @@
 import mysql, {Pool, PoolConnection} from 'mysql2/promise';
+import { config } from 'dotenv';
+import path from 'path';
+config({path: path.resolve("..", "./server/.env")});
+
 
 class DB {
   private pool: Pool | null = null;
@@ -16,7 +20,7 @@ class DB {
         password: process.env.MYSQL_PASSWORD || 'root',
         database: process.env.MYSQL_DATABASE || 'lottery',
         waitForConnections: true,
-        connectionLimit: 10,
+        connectionLimit: 50,
         queueLimit: 0
       });
     }
@@ -79,12 +83,6 @@ class DB {
   public async close() {
     if(!await this.pool?.getConnection()) return;
     this.pool?.destroy();
-    // return new Promise<void>((resolve, reject) => {
-    //   this.pool!.end(err => {
-    //     if (err) return reject(err);
-    //     resolve();
-    //   });
-    // });
   }
   /**
    * @获得对象池
