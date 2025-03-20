@@ -1,11 +1,12 @@
 import express from "express";
 import bodyParser from "body-parser";
 import DB from './db';
-import { config } from "dotenv";
 import router from "./controller";
-config();
 const opn = require("opn")
 
+Boolean(process.env.ENVS) ? 
+console.log(`………………………… 环境变量加载成功Success …………………………………`):
+console.log(`………………………… 环境变量加载失败Error …………………………………`)
 
 let app = express(),
     cwd = process.cwd(),

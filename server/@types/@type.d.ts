@@ -6,6 +6,10 @@ declare namespace NodeJS {
     MYSQL_USER: string;
     MYSQL_PASSWORD: string;
     MYSQL_DATABASE: string;
+    USERS_TABLE: users;
+    PRIZE_TABLE: prize;
+    ENVS: boolean;
+    PRIZE_MODE: number;
   }
 }
 

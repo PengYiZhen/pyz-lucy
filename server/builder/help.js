@@ -51,7 +51,6 @@ function loadXML(xmlPath) {
  * @param {string} name
  */
 function writeXML(data, name) {
-    console.log('writeXML', data);
     let buffer = xlsx.build([
         {
             name: "抽奖结果",
@@ -74,7 +73,6 @@ function writeXML(data, name) {
  */
 function saveDataFile(data) {
     data = JSON.stringify(data, null, 2);
-    console.log('data', data);
     if (!fs.existsSync(cwd)) {
         fs.mkdirSync(cwd);
     }

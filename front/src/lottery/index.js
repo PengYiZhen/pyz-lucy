@@ -104,19 +104,28 @@ function initAll() {
     url: "/getUsers",
     success(data) {
       basicData.users = data;
-
-      initCards();
+      initCards(); 
       // startMaoPao();
       animate();
       shineCard();
     }
   });
 }
-
+var isInitCards = false;
+var renderDomId = null;
 function initCards() {
+
+  if(renderDomId) {
+    document.getElementById(renderDomId).remove();
+    console.log(document.querySelector(renderDomId))
+  }
+  
+
   let member = basicData.users.slice(),
     showCards = [],
     length = member.length;
+
+  console.log(member)
 
   let isBold = false,
     showTable = basicData.leftUsers.length === basicData.users.length,
@@ -126,6 +135,8 @@ function initCards() {
       x: (140 * COLUMN_COUNT - 20) / 2,
       y: (180 * ROW_COUNT - 20) / 2
     };
+
+  console.log('..................', basicData.leftUsers.length, basicData.users.length)
 
   camera = new THREE.PerspectiveCamera(
     40,
@@ -179,6 +190,8 @@ function initCards() {
 
   renderer = new THREE.CSS3DRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  renderDomId = `containerRender${Math.floor(Math.random()*10000000)}`;
+  renderer.domElement.id = renderDomId;
   document.getElementById("container").appendChild(renderer.domElement);
 
   //
@@ -189,13 +202,16 @@ function initCards() {
   controls.maxDistance = 6000;
   controls.addEventListener("change", render);
 
-  bindEvent();
+  if(!isInitCards) bindEvent();
+
 
   if (showTable) {
     switchScreen("enter");
   } else {
     switchScreen("lottery");
   }
+
+  isInitCards = true;
 }
 
 function setLotteryStatus(status = false) {
@@ -211,8 +227,10 @@ function bindEvent() {
     // 如果正在抽奖，则禁止一切操作
     if (isLotting) {
       if (e.target.id === "lottery") {
+        // 这里应该是结束把
         rotateObj.stop();
         btns.lottery.innerHTML = "开始抽奖";
+        saveData();
       } else {
         addQipao("正在抽奖，抽慢一点点～～");
       }
@@ -235,6 +253,23 @@ function bindEvent() {
         switchScreen("lottery");
         break;
       // 重置
+      case "next": 
+       // 2025-03-20
+        window.AJAX({
+            url: "/getUsers",
+            success(data) {
+              basicData.users = data;
+              initCards();
+              // startMaoPao();
+              animate();
+              shineCard();
+              // rotate = true;
+              setTimeout(()=>{
+                // switchScreen("lottery");
+              },1000)
+            }
+        });
+        break;
       case "reset":
         let doREset = window.confirm(
           "是否确认重置数据，重置后，当前已抽的奖项全部清空？"
@@ -260,8 +295,10 @@ function bindEvent() {
       case "lottery":
         setLotteryStatus(true);
         // 每次抽奖前先保存上一次的抽奖数据
-        saveData();
+        // saveData();
         //更新剩余抽奖数目的数据显示
+       
+        console.log("点击抽奖")
         changePrize();
         resetCard().then(res => {
           // 抽奖
@@ -306,17 +343,17 @@ function bindEvent() {
   window.addEventListener("resize", onWindowResize, false);
 }
 
-function switchScreen(type) {
+function switchScreen(type, isRenderQiu=true) {
   switch (type) {
     case "enter":
       btns.enter.classList.remove("none");
       btns.lotteryBar.classList.add("none");
-      transform(targets.table, 2000);
+      if(isRenderQiu) transform(targets.table, 2000);
       break;
     default:
       btns.enter.classList.add("none");
       btns.lotteryBar.classList.remove("none");
-      transform(targets.sphere, 2000);
+      if(isRenderQiu) transform(targets.sphere, 2000);
       break;
   }
 }
@@ -458,11 +495,11 @@ function onWindowResize() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   render();
 }
-
+var isAnimationInit = false;
 function animate() {
   // 让场景通过x轴或者y轴旋转
   // rotate && (scene.rotation.y += 0.088);
-
+  isAnimationInit = true;
   requestAnimationFrame(animate);
   TWEEN.update();
   controls.update();
@@ -620,6 +657,7 @@ function lottery() {
   //   btns.lottery.innerHTML = "开始抽奖";
   //   return;
   // }
+
   btns.lottery.innerHTML = "结束抽奖";
   rotateBall().then(() => {
     // 将之前的记录置空
@@ -657,6 +695,7 @@ function lottery() {
     // console.log(currentLuckys);
     selectCard();
   });
+
 }
 
 /**
@@ -727,12 +766,14 @@ function shine(cardIndex, color) {
 /**
  * 随机切换背景和人员信息
  */
+var shineCardTime = null;
 function shineCard() {
+  clearInterval(shineCardTime);
   let maxCard = 10,
     maxUser;
   let shineCard = 10 + random(maxCard);
 
-  setInterval(() => {
+  shineCardTime = setInterval(() => {
     // 正在抽奖停止闪烁
     if (isLotting) {
       return;
