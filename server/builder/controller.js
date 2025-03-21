@@ -79,6 +79,8 @@ router.post("/getTempData", async (req, res, next) => {
         const result = await db_1.default.execute(`select * from ${process.env.PRIZE_TABLE || 'prize'}`);
         curData.users = result;
         config_1.default.EACH_COUNT = result.map((item) => item.count);
+        config_1.default.prizes = result;
+        console.log(config_1.default.EACH_COUNT);
         res.json({
             cfgData: config_1.default,
             leftUsers: curData.leftUsers,
@@ -206,8 +208,8 @@ async function loadData() {
         console.log("加载MySQL数据");
         let result = [];
         Number(process.env.PRIZE_MODE) === 1 ?
-            result = await db_1.default.execute(`SELECT * FROM ${process.env.USERS_TABLE || 'users'}`) :
-            result = await db_1.default.execute(`SELECT * FROM ${process.env.USERS_TABLE || 'users'} WHERE status = 0`);
+            result = await db_1.default.execute(`SELECT * FROM ${process.env.USERS_TABLE || 'users'} WHERE status = 0`) :
+            result = await db_1.default.execute(`SELECT * FROM ${process.env.USERS_TABLE || 'users'}`);
         curData.users = result.map(row => [row.openid, row.name, row.phone]);
         shuffle(curData.users || []);
         loadTempData().then((data) => {

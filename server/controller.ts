@@ -88,6 +88,8 @@ router.post("/getTempData", async (req, res, next) => {
         const result = await DB.execute(`select * from ${process.env.PRIZE_TABLE || 'prize'}`);
         curData.users = result as any[];
         cfg.EACH_COUNT = (result as any[]).map((item: { count: number; })=>item.count);
+        cfg.prizes = result as any[];
+        console.log(cfg.EACH_COUNT)
         res.json({
             cfgData: cfg,
             leftUsers: curData.leftUsers,
@@ -103,7 +105,10 @@ router.post("/getTempData", async (req, res, next) => {
 });
 
 // 获取所有用户
-router.post("/reset", (req, res, next) => {
+router.post("/reset", async (req, res, next) => {
+    if(await DB.getConnectionStatus()){
+       await DB.execute(`UPDATE ${process.env.USERS_TABLE || 'users'} SET status = 0, text = '';`);
+    }
     luckyData = {};
     errorData = [];
     log(`重置数据成功`);
@@ -222,8 +227,8 @@ async function loadData(): Promise<void> {
         console.log("加载MySQL数据");
         let result: QueryResult | undefined = [];
         Number(process.env.PRIZE_MODE) === 1?
-        result = await DB.execute(`SELECT * FROM ${process.env.USERS_TABLE || 'users'}`):
-        result = await DB.execute(`SELECT * FROM ${process.env.USERS_TABLE || 'users'} WHERE status = 0`);
+        result = await DB.execute(`SELECT * FROM ${process.env.USERS_TABLE || 'users'} WHERE status = 0`):
+        result = await DB.execute(`SELECT * FROM ${process.env.USERS_TABLE || 'users'}`);
         curData.users = (result as any[]).map(row => [row.openid, row.name, row.phone]) as any;
         shuffle(curData.users || []);
         loadTempData().then((data: any[]) => {

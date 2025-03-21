@@ -53,10 +53,10 @@
   </head>
 
   <body>
-    <div class="login-container">
+    <div class="login-container" style="opacity: 0;">
       <h2>请输入密码进入抽奖系统</h2>
       <input type="password" id="password" placeholder="密码" />
-      <button onclick="checkPassword()">登录</button>
+      <button id="submitBtn">登录</button>
     </div>
 
     <div id="content">
@@ -87,7 +87,6 @@
       <div id="menu">
         <button id="enter">进入抽奖</button>
         <div id="lotteryBar" class="none">
-          <button id="next">进入下一轮(测试-禁用)</button>
           <button id="lottery">开始抽奖</button>
           <button id="reLottery">重新抽奖</button>
           <div class="fixed-bar">
@@ -100,19 +99,5 @@
 
       <div class="qipao-container"></div>
     </div>
-
-    <script>
-      const correctPassword = "112233"; // 设置静态密码
-
-      function checkPassword() {
-        const passwordInput = document.getElementById("password").value;
-        if (passwordInput === correctPassword) {
-          document.querySelector('.login-container').style.display = 'none';
-          document.getElementById('content').style.display = 'block';
-        } else {
-          alert("密码错误，请重试。");
-        }
-      }
-    </script>
   </body>
 </html>
