@@ -1,3 +1,4 @@
+
 const MAX_TOP = 300,
   MAX_WIDTH = document.body.clientWidth;
 
