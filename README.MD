@@ -1,6 +1,6 @@
 # Pyz-Lucy Project
-## Lottery Program
-
+## Lottery Program  
+## 抽奖程序
 [点击跳转至中文使用文档](README-ZH_CN.MD)
 
 ## Introduction
