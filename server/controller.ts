@@ -89,7 +89,6 @@ router.post("/getTempData", async (req, res, next) => {
         curData.users = result as any[];
         cfg.EACH_COUNT = (result as any[]).map((item: { count: number; })=>item.count);
         cfg.prizes = result as any[];
-        console.log(cfg.EACH_COUNT)
         res.json({
             cfgData: cfg,
             leftUsers: curData.leftUsers,
