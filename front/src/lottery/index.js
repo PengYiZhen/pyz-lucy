@@ -10,6 +10,8 @@ import {
 } from "./prizeList";
 import { NUMBER_MATRIX } from "./config.js";
 
+
+
 const ROTATE_TIME = 3000;
 const ROTATE_LOOP = 1000;
 const BASE_HEIGHT = 1080;
@@ -62,10 +64,10 @@ initAll();
 /**
  * 初始化所有DOM
  */
-function initAll() {
+function initAll () {
   window.AJAX({
     url: "/getTempData",
-    success(data) {
+    success (data) {
       // 获取基础数据
       prizes = data.cfgData.prizes;
       EACH_COUNT = data.cfgData.EACH_COUNT;
@@ -102,9 +104,9 @@ function initAll() {
 
   window.AJAX({
     url: "/getUsers",
-    success(data) {
+    success (data) {
       basicData.users = data;
-      initCards(); 
+      initCards();
       // startMaoPao();
       animate();
       shineCard();
@@ -113,19 +115,17 @@ function initAll() {
 }
 var isInitCards = false;
 var renderDomId = null;
-function initCards() {
-
-  if(renderDomId) {
+function initCards () {
+  if (renderDomId) {
     document.getElementById(renderDomId).remove();
-    console.log(document.querySelector(renderDomId))
+    console.log(document.querySelector(renderDomId));
   }
-  
 
   let member = basicData.users.slice(),
     showCards = [],
     length = member.length;
 
-  console.log(member)
+  console.log(member);
 
   let isBold = false,
     showTable = basicData.leftUsers.length === basicData.users.length,
@@ -136,8 +136,9 @@ function initCards() {
       y: (180 * ROW_COUNT - 20) / 2
     };
 
-  console.log('..................', basicData.leftUsers.length, basicData.users.length)
+  console.log('..................', basicData.leftUsers.length, basicData.users.length);
 
+  // 重新初始化 Three.js 场景、相机、渲染器等
   camera = new THREE.PerspectiveCamera(
     40,
     window.innerWidth / window.innerHeight,
@@ -147,6 +148,12 @@ function initCards() {
   camera.position.z = 3000;
 
   scene = new THREE.Scene();
+
+  threeDCards = [];
+  targets = {
+    table: [],
+    sphere: []
+  };
 
   for (let i = 0; i < ROW_COUNT; i++) {
     for (let j = 0; j < COLUMN_COUNT; j++) {
@@ -164,7 +171,6 @@ function initCards() {
       object.position.z = Math.random() * 4000 - 2000;
       scene.add(object);
       threeDCards.push(object);
-      //
 
       var object = new THREE.Object3D();
       object.position.x = j * 140 - position.x;
@@ -175,7 +181,6 @@ function initCards() {
   }
 
   // sphere
-
   var vector = new THREE.Vector3();
 
   for (var i = 0, l = threeDCards.length; i < l; i++) {
@@ -190,11 +195,9 @@ function initCards() {
 
   renderer = new THREE.CSS3DRenderer();
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderDomId = `containerRender${Math.floor(Math.random()*10000000)}`;
+  renderDomId = `containerRender${Math.floor(Math.random() * 10000000)}`;
   renderer.domElement.id = renderDomId;
   document.getElementById("container").appendChild(renderer.domElement);
-
-  //
 
   controls = new THREE.TrackballControls(camera, renderer.domElement);
   controls.rotateSpeed = 0.5;
@@ -202,8 +205,7 @@ function initCards() {
   controls.maxDistance = 6000;
   controls.addEventListener("change", render);
 
-  if(!isInitCards) bindEvent();
-
+  if (!isInitCards) bindEvent();
 
   if (showTable) {
     switchScreen("enter");
@@ -212,16 +214,25 @@ function initCards() {
   }
 
   isInitCards = true;
-}
 
-function setLotteryStatus(status = false) {
+  // 调试信息
+  console.log("initCards 完成", {
+    camera,
+    scene,
+    renderer,
+    controls,
+    threeDCards,
+    targets
+  });
+}
+function setLotteryStatus (status = false) {
   isLotting = status;
 }
 
 /**
  * 事件绑定
  */
-function bindEvent() {
+function bindEvent () {
   document.querySelector("#menu").addEventListener("click", function (e) {
     e.stopPropagation();
     // 如果正在抽奖，则禁止一切操作
@@ -230,7 +241,7 @@ function bindEvent() {
         // 这里应该是结束把
         rotateObj.stop();
         btns.lottery.innerHTML = "开始抽奖";
-        saveData();
+        // saveData();
       } else {
         addQipao("正在抽奖，抽慢一点点～～");
       }
@@ -253,21 +264,33 @@ function bindEvent() {
         switchScreen("lottery");
         break;
       // 重置
-      case "next": 
-       // 2025-03-20
+      case "next":
+        // 清空相关数据结构
+        basicData.users = [];
+        basicData.leftUsers = [];
+        basicData.luckyUsers = {};
+        currentLuckys = [];
+        selectedCardIndex = [];
+        threeDCards = [];
+        targets = {
+          table: [],
+          sphere: []
+        };
+
+        // 重新获取用户数据
         window.AJAX({
-            url: "/getUsers",
-            success(data) {
-              basicData.users = data;
-              initCards();
-              // startMaoPao();
-              animate();
-              shineCard();
-              // rotate = true;
-              setTimeout(()=>{
-                // switchScreen("lottery");
-              },1000)
-            }
+          url: "/getUsers",
+          success (data) {
+            basicData.users = data;
+            initCards();
+            // startMaoPao();
+            animate();
+            shineCard();
+            // rotate = true;
+            // setTimeout(() => {
+            // switchScreen("lottery");
+            // }, 1000)
+          }
         });
         break;
       case "reset":
@@ -297,7 +320,7 @@ function bindEvent() {
         // 每次抽奖前先保存上一次的抽奖数据
         // saveData();
         //更新剩余抽奖数目的数据显示
-       
+
         console.log("点击抽奖")
         changePrize();
         resetCard().then(res => {
@@ -343,17 +366,17 @@ function bindEvent() {
   window.addEventListener("resize", onWindowResize, false);
 }
 
-function switchScreen(type, isRenderQiu=true) {
+function switchScreen (type, isRenderQiu = true) {
   switch (type) {
     case "enter":
       btns.enter.classList.remove("none");
       btns.lotteryBar.classList.add("none");
-      if(isRenderQiu) transform(targets.table, 2000);
+      if (isRenderQiu) transform(targets.table, 2000);
       break;
     default:
       btns.enter.classList.add("none");
       btns.lotteryBar.classList.remove("none");
-      if(isRenderQiu) transform(targets.sphere, 2000);
+      if (isRenderQiu) transform(targets.sphere, 2000);
       break;
   }
 }
@@ -361,7 +384,7 @@ function switchScreen(type, isRenderQiu=true) {
 /**
  * 创建元素
  */
-function createElement(css, text) {
+function createElement (css, text) {
   let dom = document.createElement("div");
   dom.className = css || "";
   dom.innerHTML = text || "";
@@ -371,7 +394,7 @@ function createElement(css, text) {
 /**
  * 创建名牌
  */
-function createCard(user, isBold, id, showTable) {
+function createCard (user, isBold, id, showTable) {
   var element = createElement();
   element.id = "card-" + id;
 
@@ -394,13 +417,13 @@ function createCard(user, isBold, id, showTable) {
   return element;
 }
 
-function removeHighlight() {
+function removeHighlight () {
   document.querySelectorAll(".highlight").forEach(node => {
     node.classList.remove("highlight");
   });
 }
 
-function addHighlight() {
+function addHighlight () {
   document.querySelectorAll(".lightitem").forEach(node => {
     node.classList.add("highlight");
   });
@@ -409,8 +432,8 @@ function addHighlight() {
 /**
  * 渲染地球等
  */
-function transform(targets, duration) {
-  // TWEEN.removeAll();
+function transform (targets, duration) {
+  TWEEN.removeAll();
   for (var i = 0; i < threeDCards.length; i++) {
     var object = threeDCards[i];
     var target = targets[i];
@@ -465,7 +488,7 @@ function transform(targets, duration) {
 //   });
 // }
 
-function rotateBall() {
+function rotateBall () {
   return new Promise((resolve, reject) => {
     scene.rotation.y = 0;
     rotateObj = new TWEEN.Tween(scene.rotation);
@@ -489,30 +512,30 @@ function rotateBall() {
   });
 }
 
-function onWindowResize() {
+function onWindowResize () {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
   render();
 }
 var isAnimationInit = false;
-function animate() {
+function animate () {
   // 让场景通过x轴或者y轴旋转
   // rotate && (scene.rotation.y += 0.088);
-  isAnimationInit = true;
+  // isAnimationInit = true;
   requestAnimationFrame(animate);
   TWEEN.update();
   controls.update();
 
   // 渲染循环
-  // render();
+  render();
 }
 
-function render() {
+function render () {
   renderer.render(scene, camera);
 }
 
-function selectCard(duration = 600) {
+function selectCard (duration = 600) {
   rotate = false;
   let width = 140,
     tag = -(currentLuckys.length - 1) / 2,
@@ -599,7 +622,7 @@ function selectCard(duration = 600) {
 /**
  * 重置抽奖牌内容
  */
-function resetCard(duration = 500) {
+function resetCard (duration = 500) {
   if (currentLuckys.length === 0) {
     return Promise.resolve();
   }
@@ -651,7 +674,7 @@ function resetCard(duration = 500) {
 /**
  * 抽奖
  */
-function lottery() {
+function lottery () {
   // if (isLotting) {
   //   rotateObj.stop();
   //   btns.lottery.innerHTML = "开始抽奖";
@@ -694,6 +717,8 @@ function lottery() {
 
     // console.log(currentLuckys);
     selectCard();
+    // 在抽奖结束后立即保存数据
+    saveData();
   });
 
 }
@@ -701,7 +726,7 @@ function lottery() {
 /**
  * 保存上一次的抽奖结果
  */
-function saveData() {
+function saveData () {
   if (!currentPrize) {
     //若奖品抽完，则不再记录数据，但是还是可以进行抽奖
     return;
@@ -729,7 +754,7 @@ function saveData() {
   return Promise.resolve();
 }
 
-function changePrize() {
+function changePrize () {
   let luckys = basicData.luckyUsers[currentPrize.type];
   let luckyCount = (luckys ? luckys.length : 0) + EACH_COUNT[currentPrizeIndex];
   // 修改左侧prize的数目和百分比
@@ -739,7 +764,7 @@ function changePrize() {
 /**
  * 随机抽奖
  */
-function random(num) {
+function random (num) {
   // Math.floor取到0-num-1之间数字的概率是相等的
   return Math.floor(Math.random() * num);
 }
@@ -747,7 +772,7 @@ function random(num) {
 /**
  * 切换名牌人员信息
  */
-function changeCard(cardIndex, user) {
+function changeCard (cardIndex, user) {
   let card = threeDCards[cardIndex].element;
 
   card.innerHTML = `<div class="company">${COMPANY}</div><div class="name">${user[1]
@@ -757,7 +782,7 @@ function changeCard(cardIndex, user) {
 /**
  * 切换名牌背景
  */
-function shine(cardIndex, color) {
+function shine (cardIndex, color) {
   let card = threeDCards[cardIndex].element;
   card.style.backgroundColor =
     color || "rgba(0,127,127," + (Math.random() * 0.7 + 0.25) + ")";
@@ -767,7 +792,7 @@ function shine(cardIndex, color) {
  * 随机切换背景和人员信息
  */
 var shineCardTime = null;
-function shineCard() {
+function shineCard () {
   clearInterval(shineCardTime);
   let maxCard = 10,
     maxUser;
@@ -792,7 +817,7 @@ function shineCard() {
   }, 500);
 }
 
-function setData(type, data) {
+function setData (type, data) {
   return new Promise((resolve, reject) => {
     window.AJAX({
       url: "/saveData",
@@ -800,37 +825,37 @@ function setData(type, data) {
         type,
         data
       },
-      success() {
+      success () {
         resolve();
       },
-      error() {
+      error () {
         reject();
       }
     });
   });
 }
 
-function setErrorData(data) {
+function setErrorData (data) {
   return new Promise((resolve, reject) => {
     window.AJAX({
       url: "/errorData",
       data: {
         data
       },
-      success() {
+      success () {
         resolve();
       },
-      error() {
+      error () {
         reject();
       }
     });
   });
 }
 
-function exportData() {
+function exportData () {
   window.AJAX({
     url: "/export",
-    success(data) {
+    success (data) {
       if (data.type === "success") {
         const a = document.createElement("a");
         a.href = data.url;
@@ -843,16 +868,16 @@ function exportData() {
   });
 }
 
-function reset() {
+function reset () {
   window.AJAX({
     url: "/reset",
-    success(data) {
+    success (data) {
       console.log("重置成功");
     }
   });
 }
 
-function createHighlight() {
+function createHighlight () {
   let year = new Date().getFullYear() + "";
   let step = 4,
     xoffset = 1,
@@ -882,7 +907,7 @@ window.onload = function () {
     stopAnimate = false,
     musicBox = document.querySelector("#musicBox");
 
-  function animate() {
+  function animate () {
     requestAnimationFrame(function () {
       if (stopAnimate) {
         return;
