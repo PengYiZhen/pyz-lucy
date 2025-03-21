@@ -2,8 +2,7 @@ import express from "express";
 import cfg from "./config";
 import DB from './db';
 import path from "path";
-import chokidar from "chokidar";
-import { FieldPacket, QueryError } from "mysql2";
+import { QueryResult } from "mysql2";
 const router = express.Router();
 let curData: { users?: User[], leftUsers?: User[] } = {}
 let errorData: ErrorData = [];
@@ -86,8 +85,7 @@ router.post("/login", (req, res, next) => {
 router.post("/getTempData", async (req, res, next) => {
     getLeftUsers();
     if(await DB.getConnectionStatus()) {
-        const result = await DB.execute(`select * from ${process.env.CHOUJIANG_TABLE_NAME || 'prize'}`);
-        console.log(result)
+        const result = await DB.execute(`select * from ${process.env.PRIZE_TABLE || 'prize'}`);
         curData.users = result as any[];
         cfg.EACH_COUNT = (result as any[]).map((item: { count: number; })=>item.count);
         res.json({
@@ -131,8 +129,13 @@ router.post("/getPrizes", (req, res, next) => {
 });
 
 // 保存抽奖数据
-router.post("/saveData", (req, res, next) => {
+router.post("/saveData", async (req, res, next) => {
     let data = req.body;
+    if(Number(process.env.PRIZE_MODE) === 1) {
+        const result = await DB.execute(`select * from ${process.env.PRIZE_TABLE || 'prize'} WHERE type = ${data.type}`) as any[];
+        const userIds = data.data.map((item: User[])=>item[0]);
+        await DB.execute(`UPDATE ${process.env.USERS_TABLE || 'users'} SET status = 1 , text = "${result[0]?.text}" WHERE openid IN ('${userIds.join("','")}');`) as any[];
+    }
     setLucky(data.type, data.data)
         .then(t => {
             res.json({
@@ -149,7 +152,7 @@ router.post("/saveData", (req, res, next) => {
 });
 
 // 保存抽奖数据
-router.post("/errorData", (req, res, next) => {
+router.post("/errorData", async (req, res, next) => {
     let data = req.body;
     setErrorData(data.data)
         .then(t => {
@@ -217,7 +220,10 @@ router.all("*", (req, res) => {
 async function loadData(): Promise<void> {
     if (await DB.getConnectionStatus()) {
         console.log("加载MySQL数据");
-        const result= await DB.execute(`SELECT * FROM ${process.env.USER_TABLE_NAME || 'users'}`);
+        let result: QueryResult | undefined = [];
+        Number(process.env.PRIZE_MODE) === 1?
+        result = await DB.execute(`SELECT * FROM ${process.env.USERS_TABLE || 'users'}`):
+        result = await DB.execute(`SELECT * FROM ${process.env.USERS_TABLE || 'users'} WHERE status = 0`);
         curData.users = (result as any[]).map(row => [row.openid, row.name, row.phone]) as any;
         shuffle(curData.users || []);
         loadTempData().then((data: any[]) => {

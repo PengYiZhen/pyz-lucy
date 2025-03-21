@@ -7,10 +7,11 @@ exports.server = void 0;
 const express_1 = __importDefault(require("express"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const db_1 = __importDefault(require("./db"));
-const dotenv_1 = require("dotenv");
 const controller_1 = __importDefault(require("./controller"));
-(0, dotenv_1.config)();
 const opn = require("opn");
+Boolean(process.env.ENVS) ?
+    console.log(`………………………… 环境变量加载成功Success …………………………………`) :
+    console.log(`………………………… 环境变量加载失败Error …………………………………`);
 let app = (0, express_1.default)(), cwd = process.cwd(), dataBath = __dirname, port = 8090, luckyData = {}, errorData = [];
 // 这里指定参数使用 json 格式
 app.use(body_parser_1.default.json({

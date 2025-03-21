@@ -4,6 +4,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const promise_1 = __importDefault(require("mysql2/promise"));
+const dotenv_1 = require("dotenv");
+const path_1 = __importDefault(require("path"));
+(0, dotenv_1.config)({ path: path_1.default.resolve("..", "./server/.env") });
 class DB {
     pool = null;
     constructor() {
@@ -20,7 +23,7 @@ class DB {
                 password: process.env.MYSQL_PASSWORD || 'root',
                 database: process.env.MYSQL_DATABASE || 'lottery',
                 waitForConnections: true,
-                connectionLimit: 10,
+                connectionLimit: 50,
                 queueLimit: 0
             });
         }
@@ -86,12 +89,6 @@ class DB {
         if (!await this.pool?.getConnection())
             return;
         this.pool?.destroy();
-        // return new Promise<void>((resolve, reject) => {
-        //   this.pool!.end(err => {
-        //     if (err) return reject(err);
-        //     resolve();
-        //   });
-        // });
     }
     /**
      * @获得对象池

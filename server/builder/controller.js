@@ -76,8 +76,7 @@ router.post("/login", (req, res, next) => {
 router.post("/getTempData", async (req, res, next) => {
     getLeftUsers();
     if (await db_1.default.getConnectionStatus()) {
-        const result = await db_1.default.execute(`select * from ${process.env.CHOUJIANG_TABLE_NAME || 'prize'}`);
-        console.log(result);
+        const result = await db_1.default.execute(`select * from ${process.env.PRIZE_TABLE || 'prize'}`);
         curData.users = result;
         config_1.default.EACH_COUNT = result.map((item) => item.count);
         res.json({
@@ -118,8 +117,13 @@ router.post("/getPrizes", (req, res, next) => {
     log(`成功返回奖品数据`);
 });
 // 保存抽奖数据
-router.post("/saveData", (req, res, next) => {
+router.post("/saveData", async (req, res, next) => {
     let data = req.body;
+    if (Number(process.env.PRIZE_MODE) === 1) {
+        const result = await db_1.default.execute(`select * from ${process.env.PRIZE_TABLE || 'prize'} WHERE type = ${data.type}`);
+        const userIds = data.data.map((item) => item[0]);
+        await db_1.default.execute(`UPDATE ${process.env.USERS_TABLE || 'users'} SET status = 1 , text = "${result[0]?.text}" WHERE openid IN ('${userIds.join("','")}');`);
+    }
     setLucky(data.type, data.data)
         .then(t => {
         res.json({
@@ -135,7 +139,7 @@ router.post("/saveData", (req, res, next) => {
     });
 });
 // 保存抽奖数据
-router.post("/errorData", (req, res, next) => {
+router.post("/errorData", async (req, res, next) => {
     let data = req.body;
     setErrorData(data.data)
         .then(t => {
@@ -200,7 +204,10 @@ router.all("*", (req, res) => {
 async function loadData() {
     if (await db_1.default.getConnectionStatus()) {
         console.log("加载MySQL数据");
-        const result = await db_1.default.execute(`SELECT * FROM ${process.env.USER_TABLE_NAME || 'users'}`);
+        let result = [];
+        Number(process.env.PRIZE_MODE) === 1 ?
+            result = await db_1.default.execute(`SELECT * FROM ${process.env.USERS_TABLE || 'users'}`) :
+            result = await db_1.default.execute(`SELECT * FROM ${process.env.USERS_TABLE || 'users'} WHERE status = 0`);
         curData.users = result.map(row => [row.openid, row.name, row.phone]);
         shuffle(curData.users || []);
         loadTempData().then((data) => {
